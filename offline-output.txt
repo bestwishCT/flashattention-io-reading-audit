@@ -1,0 +1,81 @@
+FlashAttention-2 reading audit - offline arithmetic
+Setup (P): GPT-2 medium, seq. length 1024, head dim 64, 16 heads, batch size 64, A100 GPU
+All values below are arithmetic on values transcribed from the paper.
+No GPU was used, no kernel was run, no model was trained.
+
+== 1. Figure 2 (left): FLOPs up, HBM down, runtime down  [P + A] ==
+  GFLOPs           standard=  66.6  flash=  75.2  flash is higher;  standard/flash = 0.89x  [A]
+  HBM R/W (GB)     standard=  40.3  flash=   4.4  flash is lower;  standard/flash = 9.16x  [A]
+  Runtime (ms)     standard=  41.7  flash=   7.3  flash is lower;  standard/flash = 5.71x  [A]
+
+  Reading check (A):
+    FlashAttention GFLOPs ratio   = 75.2/66.6 = 1.129  (>1 => MORE flops)
+    HBM R/W reduction factor      = 40.3/4.4 = 9.16x fewer bytes moved
+    Runtime speedup               = 41.7/7.3 = 5.71x faster
+
+  Directionality check (A): flops grew by 1.129x, yet wall-clock improved by 5.71x.
+  => The quantity that moved in the SAME direction as the runtime win
+     is HBM traffic, not FLOPs. This is the paper's central claim [P: p.6 l.53-56].
+
+== 2. Theorem 2 expression, evaluated at paper-typical parameters  [P + A] ==
+  Standard attention : Theta(N*d + N^2)      HBM accesses
+  FlashAttention     : Theta(N^2*d^2*M^-1)   HBM accesses
+  Paper-typical (P): d = 64..128, M ~ 100KB, and d^2 is 'many times smaller than M'.
+
+  (T) Teaching example, invented parameters: N = 1024, d = 64, M = 100_000 (elements).
+    standard  = N*d + N^2          = 1024*64 + 1024^2 = 1,114,112  [A]
+    flash     = N^2*d^2/M          = 1024^2*64^2/100,000 = 42,950  [A]
+    ratio     = standard/flash     = 25.9x fewer accesses (A, this example only)
+    NOTE: this example only illustrates the formula's SHAPE. It is NOT the
+    paper's measured HBM traffic and NOT a prediction of the 9.16x above;
+    the paper's 4.4 vs 40.3 GB figures are measured, these are arithmetic.
+
+  (A) Why d^2 << M matters (T example):
+    d=  64: d^2 =   4,096   M/d^2 =     24.4   -> the M^-1 factor wins
+    d= 128: d^2 =  16,384   M/d^2 =      6.1   -> the M^-1 factor wins
+
+== 3. Table 2 (page 8): speedups recomputed from training days  [P + A] ==
+  GPT-2 small  - Huggingface       ppl= 18.2    9.5 days  claimed 1.0x
+  GPT-2 small  - Megatron-LM       ppl= 18.2    4.7 days  claimed 2.0x
+  GPT-2 small  - FlashAttention    ppl= 18.2    2.7 days  claimed 3.5x
+  GPT-2 medium - Huggingface       ppl= 14.2   21.0 days  claimed 1.0x
+  GPT-2 medium - Megatron-LM       ppl= 14.3   11.5 days  claimed 1.8x
+  GPT-2 medium - FlashAttention    ppl= 14.3    6.9 days  claimed 3.0x
+
+  GPT-2 small  - Megatron-LM       derived = 9.5/4.7 = 2.02x  vs claimed 2.0x   [OK]
+  GPT-2 small  - FlashAttention    derived = 9.5/2.7 = 3.52x  vs claimed 3.5x   [OK]
+  GPT-2 medium - Megatron-LM       derived = 21.0/11.5 = 1.83x  vs claimed 1.8x   [OK]
+  GPT-2 medium - FlashAttention    derived = 21.0/6.9 = 3.04x  vs claimed 3.0x   [OK]
+
+  (A) Perplexity comparison - the small quality gap the model must not hide:
+    GPT-2 small : all three implementations report ppl = [18.2]  -> identical
+    GPT-2 medium: Huggingface=14.2, Megatron-LM=14.3, FlashAttention=14.3
+      FlashAttention vs Huggingface  = +0.1 ppl (FlashAttention is worse)
+      FlashAttention vs Megatron-LM  = +0.0 ppl (identical to Megatron-LM)
+    => 'the same perplexity' is exactly true for GPT-2 small, but for
+       GPT-2 medium FlashAttention's ppl is 0.1 HIGHER than HuggingFace's.
+
+== 4. Block-sparse speedup vs sparsity  [T: figure axes are read from page 6] ==
+  Figure 2 (right) plots Fwd+Bwd runtime against % Non-Zero Blocks;
+  the paper states the speedup is 'proportional to the sparsity' [P: p.6 l.30].
+
+  (T) Teaching example: assume dense FlashAttention takes 100 units at 100% blocks.
+      If the sparse variant keeps only f fraction of blocks and the speedup
+      were exactly proportional to sparsity, runtime would scale as f.
+      non-zero blocks 100.0%  ->  predicted runtime  100.0 units  [T]
+      non-zero blocks  80.0%  ->  predicted runtime   80.0 units  [T]
+      non-zero blocks  60.0%  ->  predicted runtime   60.0 units  [T]
+      non-zero blocks  50.0%  ->  predicted runtime   50.0 units  [T]
+      non-zero blocks  40.0%  ->  predicted runtime   40.0 units  [T]
+      non-zero blocks  20.0%  ->  predicted runtime   20.0 units  [T]
+      These are TEACHING numbers. The real figure is a measured plot and the
+      paper only claims proportionality, not an exact closed form.
+      Also from the paper (P: p.6 l.58-60): past block size 256 the runtime
+      stops improving (arithmetic bottleneck), and larger blocks stop
+      fitting in SRAM. So 'bigger sparse blocks = faster' is NOT unbounded.
+
+-- summary --
+  Paper values (P): Fig.2 left table, Table 2, Theorem 2 / Proposition 3, Fig.2 caption.
+  Arithmetic (A):    all ratios, speedup recomputation, ppl differences.
+  Teaching (T):      the N/d/M example and the block-sparse proportionality table.
+  NOT done:           no GPU run, no kernel run, no training, no NLI, no new experiment.

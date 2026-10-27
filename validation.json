@@ -1,0 +1,113 @@
+{
+  "status": "ranges_valid",
+  "errors": [],
+  "semantic": "not_evaluated",
+  "excerpt_count": 15,
+  "excerpts": [
+    {
+      "decision": "D1",
+      "source_id": "FA2-P6",
+      "start_line": 1,
+      "end_line": 4,
+      "text": "Attention StandardFlashAttention\nGFLOPs 66.6 75.2\nHBM R/W (GB)40.3 4.4\nRuntime (ms)41.7 7.3"
+    },
+    {
+      "decision": "D1",
+      "source_id": "FA2-P6",
+      "start_line": 26,
+      "end_line": 29,
+      "text": "Figure 2: Left: Forward + backward runtime of standard attention andFlashAttention for GPT-2 medium\n(seq. length 1024, head dim. 64, 16 heads, batch size 64) on A100 GPU. HBM access is the primary factor aﬀecting\nruntime. Middle: Forward runtime ofFlashAttention(seq. length 1024, head dim. 64, 16 heads, batch size 64) on\nA100 GPU. Fewer HBM accesses result in faster runtime, up to a point.Right: The runtime (for seq. length 4K) of"
+    },
+    {
+      "decision": "D1",
+      "source_id": "FA2-P6",
+      "start_line": 53,
+      "end_line": 56,
+      "text": "We validate that the number of HBM accesses is the main determining factor of attention run-time.\nIn Fig. 2 (left), we see that even thoughFlashAttentionhas higher FLOP count compared to standard\nattention (due to recomputation in the backward pass), it has much fewer HBM accesses, resulting in much\nfaster runtime. In Fig. 2 (middle), we vary the block size𝐵𝑐 of FlashAttention, which results in diﬀerent"
+    },
+    {
+      "decision": "D2",
+      "source_id": "FA2-P6",
+      "start_line": 32,
+      "end_line": 36,
+      "text": "Theorem 2. Let N be the sequence length, d be the head dimension, and M be size of SRAM with d ≤ M ≤ Nd.\nStandard attention (Algorithm 0) requires Θ(Nd + N²) HBM accesses, while FlashAttention (Algorithm 1)\nrequires Θ(N²d²M⁻¹) HBM accesses.\nFor typical values of d (64-128) and M (around 100KB), d² is many times smaller than M, and thus\nFlashAttentionrequires many times fewer HBM accesses than standard implementation. This leads to"
+    },
+    {
+      "decision": "D2",
+      "source_id": "FA2-P6",
+      "start_line": 46,
+      "end_line": 51,
+      "text": "Proposition 3. Let 𝑁 be the sequence length, 𝑑 be the head dimension, and 𝑀 be size of SRAM with\nd ≤ M ≤ Nd. There does not exist an algorithm to compute exact attention with o(N²d²M⁻¹) HBM accesses\nfor all M in the range [d, Nd].\nThe proof relies on the fact that for M = Θ(Nd) any algorithm must perform Ω(N²d²M⁻¹) = Ω(Nd)\nHBM accesses. This type of lower bound over a subrange of𝑀 is common in the streaming algorithms\nliterature [88]. We leave proving parameterized complexity [27] lower bounds in terms of𝑀 as exciting future"
+    },
+    {
+      "decision": "D2",
+      "source_id": "FA2-P6",
+      "start_line": 35,
+      "end_line": 36,
+      "text": "For typical values of d (64-128) and M (around 100KB), d² is many times smaller than M, and thus\nFlashAttentionrequires many times fewer HBM accesses than standard implementation. This leads to"
+    },
+    {
+      "decision": "D2",
+      "source_id": "FA2-P1",
+      "start_line": 15,
+      "end_line": 17,
+      "text": "an IO-aware exact attention algorithm that uses tiling to reduce the number of memory reads/writes\nbetween GPU high bandwidth memory (HBM) and GPU on-chip SRAM. We analyze the IO complexity\nof FlashAttention, showing that it requires fewer HBM accesses than standard attention, and is"
+    },
+    {
+      "decision": "D3",
+      "source_id": "FA2-P1",
+      "start_line": 14,
+      "end_line": 19,
+      "text": "aware—accounting for reads and writes between levels of GPU memory. We proposeFlashAttention,\nan IO-aware exact attention algorithm that uses tiling to reduce the number of memory reads/writes\nbetween GPU high bandwidth memory (HBM) and GPU on-chip SRAM. We analyze the IO complexity\nof FlashAttention, showing that it requires fewer HBM accesses than standard attention, and is\noptimal for a range of SRAM sizes. We also extendFlashAttention to block-sparse attention, yielding\nan approximate attention algorithm that is faster than any existing approximate attention method."
+    },
+    {
+      "decision": "D3",
+      "source_id": "FA2-P8",
+      "start_line": 4,
+      "end_line": 12,
+      "text": "Table 2: GPT-2 small and medium usingFlashAttention achieve up to 3× speed up compared to Huggingface\nimplementation and up to 1.7× compared to Megatron-LM. Training time reported on 8×A100s GPUs.\nModel implementations OpenWebText (ppl) Training time (speedup)\nGPT-2 small - Huggingface [87] 18.2 9.5 days (1.0 ×)\nGPT-2 small - Megatron-LM [77] 18.2 4.7 days (2.0 ×)\nGPT-2 small -FlashAttention 18.2 2.7 days (3.5×)\nGPT-2 medium - Huggingface [87] 14.2 21.0 days (1.0 ×)\nGPT-2 medium - Megatron-LM [77] 14.3 11.5 days (1.8 ×)\nGPT-2 medium -FlashAttention 14.3 6.9 days (3.0×)"
+    },
+    {
+      "decision": "D3",
+      "source_id": "FA2-P8",
+      "start_line": 1,
+      "end_line": 3,
+      "text": "achieves the same perplexity as the other two implementations, as we do not change the model deﬁnition.\nAppendix E includes plots of the validation perplexity throughout training, conﬁrming thatFlashAttention\nis as numerically stable as the baselines and produces the same training / validation curves."
+    },
+    {
+      "decision": "D4",
+      "source_id": "FA2-P6",
+      "start_line": 32,
+      "end_line": 36,
+      "text": "Theorem 2. Let N be the sequence length, d be the head dimension, and M be size of SRAM with d ≤ M ≤ Nd.\nStandard attention (Algorithm 0) requires Θ(Nd + N²) HBM accesses, while FlashAttention (Algorithm 1)\nrequires Θ(N²d²M⁻¹) HBM accesses.\nFor typical values of d (64-128) and M (around 100KB), d² is many times smaller than M, and thus\nFlashAttentionrequires many times fewer HBM accesses than standard implementation. This leads to"
+    },
+    {
+      "decision": "D4",
+      "source_id": "FA2-P6",
+      "start_line": 53,
+      "end_line": 56,
+      "text": "We validate that the number of HBM accesses is the main determining factor of attention run-time.\nIn Fig. 2 (left), we see that even thoughFlashAttentionhas higher FLOP count compared to standard\nattention (due to recomputation in the backward pass), it has much fewer HBM accesses, resulting in much\nfaster runtime. In Fig. 2 (middle), we vary the block size𝐵𝑐 of FlashAttention, which results in diﬀerent"
+    },
+    {
+      "decision": "D4",
+      "source_id": "FA2-P3",
+      "start_line": 16,
+      "end_line": 21,
+      "text": "• Benchmarking Attention. FlashAttention is up to 3× faster than the standard attention implemen-\ntation across common sequence lengths from 128 to 2K and scales up to 64K. Up to sequence length of 512,\nFlashAttentionis both faster and more memory-eﬃcient than any existing attention method, whereas\nfor sequence length beyond 1K, some approximate attention methods (e.g., Linformer) start to become\nfaster. On the other hand, block-sparseFlashAttentionis faster than all existing approximate attention\nmethods that we know of."
+    },
+    {
+      "decision": "D4",
+      "source_id": "FA2-P6",
+      "start_line": 56,
+      "end_line": 60,
+      "text": "faster runtime. In Fig. 2 (middle), we vary the block size𝐵𝑐 of FlashAttention, which results in diﬀerent\namounts of HBM accesses, and measure the runtime of the forward pass. As block size increases, the number\nof HBM accesses decreases (as we make fewer passes over the input), and runtime decreases. For large enough\nblock size (beyond 256), the runtime is then bottlenecked by other factors (e.g., arithmetic operations).\nMoreover, larger block size will not ﬁt into the small SRAM size."
+    },
+    {
+      "decision": "D4",
+      "source_id": "FA2-P6",
+      "start_line": 28,
+      "end_line": 30,
+      "text": "runtime. Middle: Forward runtime ofFlashAttention(seq. length 1024, head dim. 64, 16 heads, batch size 64) on\nA100 GPU. Fewer HBM accesses result in faster runtime, up to a point.Right: The runtime (for seq. length 4K) of\nblock-sparse FlashAttentionis faster thanFlashAttentionby a factor proportional to the sparsity."
+    }
+  ]
+}

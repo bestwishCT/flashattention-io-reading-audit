@@ -1,0 +1,43 @@
+{
+  "challenge_id": "ai-github-98fdb6f0",
+  "condition": "single_real_call",
+  "model": "chenkun/gpt-5-mini",
+  "completion_id": "chatcmpl-EdSs4uErIUsMzpO6LZxiyevhqxsnK",
+  "usage": {
+    "completion_tokens": 3927,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 1984,
+      "rejected_prediction_tokens": 0
+    },
+    "latency_checkpoint": {
+      "engine_tbt_ms": 7,
+      "engine_ttft_ms": 129,
+      "engine_ttlt_ms": 29193,
+      "pre_inference_ms": 115,
+      "service_tbt_ms": 7,
+      "service_ttft_ms": 1421,
+      "service_ttlt_ms": 30461,
+      "user_visible_ttft_ms": 1306
+    },
+    "prompt_tokens": 5455,
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
+    },
+    "total_tokens": 9382
+  },
+  "wall_clock_seconds": 34.844,
+  "cost": null,
+  "cost_reason": "Service does not report per-request monetary debit",
+  "output_json_valid": true,
+  "mechanical_validation": "ranges_valid",
+  "mechanical_errors": [],
+  "evidence_excerpts": 15,
+  "semantic_review": "manual, by the author, non-blind (see audit.md)",
+  "scientific_rerun_claimed": false,
+  "gpu_experiment_claimed": false,
+  "prompt_improvement_claimed": false,
+  "single_call_no_control": true
+}

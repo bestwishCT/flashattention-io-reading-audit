@@ -1,0 +1,1 @@
+一次新进程单轮 Bohrium 调用：chat，--model gpt-5-mini，--payment-source photon，--output json，无历史无工具，超时 180 秒。服务端默认 temperature/seed 不可锁定，无法固定，故不做跨条件比较。请求前用同命令 --dry-run 逐字核对 data.operations[0].body.message；在 message 开头加独立非语义 nonce 防缓存。按 criteria.md 逐项审计原答，不修改后重新提交模型。原答的机械失败（如非法 JSON）保留原样并如实公开，必要时仅提供“只去掉前导零”的机读修复版并明确标注。网络失败保留失败证据并停止，不重传。费用无法逐次获知，填 null。无实际 GPU 实验，无省时/省钱/稳定增益声称。

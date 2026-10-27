@@ -1,0 +1,10 @@
+请只根据所给论文页（FA2-P1 / FA2-P3 / FA2-P6 / FA2-P8，分别对应 PDF 物理页 1 / 3 / 6 / 8），回答关于《FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness》的一个论文阅读问题：把“FLOPs 更少”“IO 访问更少”“墙钟时间更快”这三件事，以及“精确注意力”与“近似注意力”这两组标签读混，是这篇论文最常见的误读。
+
+请输出一个 JSON 对象，含 decisions 数组，每项 id 为 D1 到 D4，分别回答：
+
+- D1：第 6 页 Figure 2 左图的表给出 Standard attention 与 FlashAttention 的 GFLOPs、HBM R/W (GB)、Runtime (ms) 三组数值。请分别写出这两者这三项的数值，并说明：FlashAttention 的 GFLOPs 是更高还是更低？HBM R/W 与 Runtime 各是什么关系？作者给出的原因是哪个量在决定运行时间？
+- D2：第 6 页 Theorem 2 与 Proposition 3 给出两个复杂度结论。请写出 (a) 标准注意力与 FlashAttention 的 HBM 访问次数复杂度表达式；(b) Proposition 3 的下界结论说的是什么；(c) 论文给出的使 FlashAttention 的访问次数远少于标准实现的条件（涉及哪些参数与它们的典型取值）。请注意区分“减少/优于所有 M”与“在一段 M 范围内最优”。
+- D3：第 1 页摘要与第 3 页贡献列表里，FlashAttention 被描述为 exact 还是 approximate？块稀疏（block-sparse）FlashAttention 呢？第 8 页 Table 2 里 GPT-2 small 用 FlashAttention 的 OpenWebText 困惑度（ppl）与训练时间分别是多少，与 HuggingFace 和 Megatron-LM 相比如何？这里是否出现过模型质量下降的代价？
+- D4：从第 6、8 页能得出哪些结论、不能得出哪些结论？特别地：(a) 能否说“FlashAttention 降低了自注意力的时间复杂度”？依据是什么？(b) 能否说“近似注意力方法没有墙钟加速”？论文原文是怎么说的，前提是什么？(c) 能否把“块稀疏 FlashAttention 更快”直接推广到“所有序列长度都更快”？第 6 页 Figure 2 右图与第 9 页 Figure 3 说明了什么边界？
+
+每个 decision 项必须含：answer（回答）、evidence（数组，每项含 source_id、start_line、end_line，按所给行号，从 1 起且含两端）、limitations（边界/证据不足）。source_id 只取 ID 值（例如 "FA2-P6"），不要带 SOURCE 前缀或物理页后缀。证据不足就明确写“所给页证据不足”，不要编造；不要重抄大段引文。输出必须是合法 JSON，整数行号不加前导 0。控制在约 1500 中文字以内。

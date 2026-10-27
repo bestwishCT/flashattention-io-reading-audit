@@ -1,0 +1,107 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "answer": "表（第6页左图）数值：Standard attention — GFLOPs 66.6，HBM R/W 40.3 GB，Runtime 41.7 ms；FlashAttention — GFLOPs 75.2，HBM R/W 4.4 GB，Runtime 7.3 ms。FlashAttention 的 GFLOPs 更高（75.2 > 66.6）；但它的 HBM 读写远少于标准实现（4.4 GB vs 40.3 GB），因此运行时间也显著更短（7.3 ms vs 41.7 ms）。作者指出决定运行时间的主要量是 HBM 访问（HBM access 为主导因素），而不是 FLOPs。",
+      "evidence": [
+        {
+          "source_id": "FA2-P6",
+          "start_line": 1,
+          "end_line": 4
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 26,
+          "end_line": 29
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 53,
+          "end_line": 56
+        }
+      ],
+      "limitations": "所给页的证据局限于图表和作者的说明（单机 A100 的实验设置）；没有给出不同硬件/批次下的对比，也没给出置信区间或多次试验统计。"
+    },
+    {
+      "id": "D2",
+      "answer": "（a）HBM 访问次数复杂度：标准注意力需 Θ(N d + N^2)；FlashAttention 需 Θ(N^2 d^2 M^{-1})，其中 N 为序列长，d 为 head 维度，M 为 SRAM 大小。 （b）Proposition 3 的下界：不存在能在所有 M ∈ [d, Nd] 上把 HBM 访问降到 o(N^2 d^2 M^{-1}) 的算法（即对整个 M 范围不能做出渐进更优）。（c）论文给出的使 FlashAttention 的访问次数远少于标准实现的条件：典型 d 值为 64–128，典型 SRAM M 约为 100KB，且在这些情况下 d^2 << M，从而 N^2 d^2 M^{-1} 远小于 N^2（并且小于 N d + N^2），使得 Flash 在实际硬件参数下访问次数显著减少。注意区分：Proposition 3 说明不存在对“所有 M”统一改善的算法，但论文也声称 FlashAttention 在一段 M 范围（typical SRAM 大小）内是最优/远优的。",
+      "evidence": [
+        {
+          "source_id": "FA2-P6",
+          "start_line": 32,
+          "end_line": 36
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 46,
+          "end_line": 51
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 35,
+          "end_line": 36
+        },
+        {
+          "source_id": "FA2-P1",
+          "start_line": 15,
+          "end_line": 17
+        }
+      ],
+      "limitations": "所给页说明了复杂度表达式与典型参数，但没有给出对不同 M、d 的全面数值边界或实测的 M 分布；‘典型 M ≈100KB’来自作者表述，具体硬件差异（不同 GPU、不同 SRAM 配置）会影响结论。"
+    },
+    {
+      "id": "D3",
+      "answer": "摘要与贡献里：FlashAttention 被表述为“exact attention”（精确注意力）；块稀疏（block-sparse）FlashAttention 被表述为对 approximate attention 的扩展，是一种近似（approximate / block-sparse）方法。Table 2（第8页）中 GPT-2 small 在 OpenWebText 上的 perplexity：FlashAttention 与 HuggingFace 和 Megatron-LM 都为 18.2；训练时间：HuggingFace 9.5 天（1.0×），Megatron-LM 4.7 天（2.0×），FlashAttention 2.7 天（3.5×，表中标注）。GPT-2 medium：HuggingFace ppl 14.2、21.0 天；Megatron 14.3、11.5 天；FlashAttention 14.3、6.9 天（3.0×）。表和正文指出没有出现模型质量下降——作者说明未改变模型定义且验证/训练曲线一致（数值稳定）。",
+      "evidence": [
+        {
+          "source_id": "FA2-P1",
+          "start_line": 14,
+          "end_line": 19
+        },
+        {
+          "source_id": "FA2-P8",
+          "start_line": 4,
+          "end_line": 12
+        },
+        {
+          "source_id": "FA2-P8",
+          "start_line": 1,
+          "end_line": 3
+        }
+      ],
+      "limitations": "表格和摘要展示了 GPT-2 small/medium 在给定数据集和设置下的 ppl 与训练时长；但所给页没有展示更广泛模型/任务的泛化结果或超参数敏感性，也未给出详细随机性/多次重复的统计证据。"
+    },
+    {
+      "id": "D4",
+      "answer": "(a) 不能说“FlashAttention 降低了自注意力的时间复杂度（asymptotic time complexity）”。论文并未声称改变注意力的渐进计算复杂度（计算量仍与 N^2 相关），而是给出降低 HBM 访问复杂度 Θ(N^2 d^2 M^{-1}) 的结果，并以 HBM 访问为主要影响运行时间的因素来解释墙钟加速。依据见 Theorem 2 与对 HBM 访问主导运行时间的论述。（b）不能绝对断言“近似注意力方法没有墙钟加速”。论文说“许多近似方法尽管 FLOP 更少却往往不显示墙钟加速，因为忽略 IO”，但同时承认在更长序列（>1K）一些近似方法（例如 Linformer）可能会变得更快；此外作者提出的 block-sparse FlashAttention 作为近似方法是比已知近似方法更快的实现。（c）不能将“块稀疏 FlashAttention 更快”无条件推广到“所有序列长度都更快”。图与文本（第6页右图、第6页中间、以及第8页的长序列/不同上下文长度表）显示速度改进依赖于序列长度、块大小和稀疏率：对某些长度和参数（如 seq=4K，稀疏度高时）块稀疏会按稀疏比例更快，但在块大小过大时会受算术瓶颈且块大小必须适合 SRAM（超大块会因算术/SRAM 限制不再继续降 HBM 访问）。总体结论是：FlashAttention/块稀疏在典型硬件和参数区间能带来墙钟加速，但不能在所有 M、所有序列长度下一概而论。",
+      "evidence": [
+        {
+          "source_id": "FA2-P6",
+          "start_line": 32,
+          "end_line": 36
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 53,
+          "end_line": 56
+        },
+        {
+          "source_id": "FA2-P3",
+          "start_line": 16,
+          "end_line": 21
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 56,
+          "end_line": 60
+        },
+        {
+          "source_id": "FA2-P6",
+          "start_line": 28,
+          "end_line": 30
+        }
+      ],
+      "limitations": "所给页说明了 IO-复杂度与实验在若干序列长度/块参数下的表现，但未包含第9页 Figure 3 的具体细节（题中提到但未提供），也缺乏对所有序列长度/硬件组合的全面理论或实测边界；因此不能推广出绝对的普适结论。"
+    }
+  ]
+}
